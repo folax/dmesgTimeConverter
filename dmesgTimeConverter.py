@@ -10,7 +10,9 @@ if __name__ == "__main__":
         path_to_file = sys.argv[1]
         print("Path to file: %s" % (path_to_file))
     else:
-        print("Error. Invalid input parameters.")
+        print("Error: invalid input parameters!")
+        print("Usage:\n ./dmesgTimeConverter.py <PATH_TO_FILE> <DATE_FORMAT>")
+        print("Example: ./dmesgTimeConverter.py /var/log/dmesg 22-09-2020_07:55:37")
         sys.exit(1)
 
 # Convert string to date; 22-10-2020_08:11:21
@@ -39,7 +41,7 @@ for line in lines:
     # Get seconds;
     process_started_sec = round(float(line[line.find('[')+1 : line.find(']')].strip()), 6)
     # Subtract seconds from datetime;
-    process_started_date = uptime_datetime - datetime.timedelta(seconds=process_started_sec)
+    process_started_date = uptime_datetime + datetime.timedelta(seconds=process_started_sec)
     result = str((process_started_date.strftime("%Y/%m/%d %H:%M:%S")))
     
     # Edit file time in seconds to date;

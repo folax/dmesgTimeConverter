@@ -3,6 +3,7 @@ import datetime
 import subprocess
 import sys
 import re
+import os
 
 def hasNumbersPoint(inputString):
     stringLen=len(inputString)
@@ -17,6 +18,9 @@ def hasNumbersPoint(inputString):
         return True
     else:
         return False
+
+# Variables;
+path_to_file=""
 
 # Check input arguments;
 if __name__ == "__main__":
@@ -40,47 +44,44 @@ _minutes    =   int(_data[14:16])
 _seconds    =   int(_data[17:19])
 
 # Set date object;
-uptime_datetime = datetime.datetime(_year, _month, _day, _hours, _minutes,_seconds)
+uptime_datetime = datetime.datetime(_year, _month, _day, _hours, _minutes, _seconds)
 
 # Open file for read;
-file = open(sys.argv[1], 'r')
-lines = file.readlines()
+read_file_is_open=False
+if os.path.exists(path_to_file):
+    with open(path_to_file, 'r') as file:
+        try:
+            lines = file.readlines()
+            read_file_is_open = True
+            file.close()
+        except:
+            print("Can't read file!")
+else:
+    print("Error: invalid file path!")
 
-# Open file for write;
-outFile = open(path_to_file + ".edited", 'w')
+# Run if only we have data from file;
+if read_file_is_open:
+    with open(path_to_file + ".edited", 'w') as file:
+        try:
+            for line in lines:
+                # Get positions of seconds;
+                pos_1 = line.find("[")
+                pos_2 = line.find(']')
+                # Remove spaces from seconds;
+                check_for_seconds = line[pos_1 + 1:pos_2].strip()
+                if (hasNumbersPoint(check_for_seconds)):
+                    # Round seconds;
+                    check_for_seconds = round(float(check_for_seconds) , 6)
+                    # Add seconds to date;
+                    process_started_date = uptime_datetime + datetime.timedelta(seconds=check_for_seconds)
+                    result = str((process_started_date.strftime("%Y/%m/%d %H:%M:%S")))
+                    result = "[" + result + "] " + line[pos_2+1:]
+                    file.write(result)
+                    print(result, end="")
+                else:
+                    print(line, end="")
+                    file.write(line)
+            file.close()
+        except:
+            print("Error: can't open file for write!")
 
-for line in lines:
-    # Get positions of seconds;
-    pos_1 = line.find("[")
-    pos_2 = line.find(']')
-    # Remove spaces from seconds;
-    check_for_seconds = line[pos_1 + 1:pos_2].strip()
-    if (hasNumbersPoint(check_for_seconds)):
-        # Round seconds;
-        check_for_seconds = round(float(check_for_seconds) , 6)
-        # Add seconds to date;
-        process_started_date = uptime_datetime + datetime.timedelta(seconds=check_for_seconds)
-        result = str((process_started_date.strftime("%Y/%m/%d %H:%M:%S")))
-        result = "[" + result + "] " + line[pos_2+1:]
-        outFile.write(result)
-        print(result, end="")
-    else:
-        print(line, end="")
-        outFile.write(line)
-
-
-"""
-    # Get seconds;
-    process_started_sec = round(float(line[line.find('[')+1 : line.find(']')].strip()), 6)
-    # Subtract seconds from datetime;
-    process_started_date = uptime_datetime + datetime.timedelta(seconds=process_started_sec)
-    result = str((process_started_date.strftime("%Y/%m/%d %H:%M:%S")))
-    
-    # Edit file time in seconds to date;
-    new_line = "[" + result + "] " + line[pos_2+1:]
-    #print(new_line, end="")
-
-    # Write to file;
-    outFile.write(new_line)
-"""
-outFile.close()
